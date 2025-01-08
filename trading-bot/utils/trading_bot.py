@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 from binance.client import Client
+from binance.helpers import round_step_size
 
 class TradingBot:
     def __init__(self, api_key, secret_key, api_url):
@@ -87,20 +88,60 @@ class TradingBot:
     def get_last_row(self):
         return self.btc_df.iloc[-1]
 
+    def calculate_profit(self, order_buy, order_sell):
+        if order_buy is not None and order_sell is not None:
+            buy_commission = order_buy['fills'][0]['commission']
+            sell_commission = order_sell['fills'][0]['commission']
+
+            buy_price = float(order_buy['price'])
+            buy_qty = float(order_buy['executedQty'])
+            total_spent = float(order_buy['cummulativeQuoteQty'])
+
+            sell_price = float(order_sell['price'])
+            sell_qty = float(order_sell['executedQty'])
+            total_received = float(order_sell['cummulativeQuoteQty'])
+
+            profit = total_received - total_spent
+
+            commission_in_usdt_buy = buy_commission * buy_price
+            commission_in_usdt_sell = sell_commission * sell_price
+
+            profit_with_fees = profit - (commission_in_usdt_buy + commission_in_usdt_sell)
+
+            print(f"Lucro bruto: {profit} USDT")
+            print(f"Lucro líquido após taxas: {profit_with_fees} USDT")
+
+            with open('../lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
+                file.write(f"******************************* INICIO *******************************\n")
+                file.write(f"Lucro bruto: {profit} USDT\n")
+                file.write(f"Lucro líquido após taxas: {profit_with_fees} USDT\n")
+                file.write(f"******************************* FIM *******************************\n\n\n")
+
     def execute_trading(self):
         self.get_sma()
+
+        symbol_info = self.client.get_symbol_info('BTCUSDT')
+
+        lot_size = next(filter for filter in symbol_info['filters'] if filter['filterType'] == 'LOT_SIZE')
+        step_size = float(lot_size['stepSize'])
 
         balance = self.client.get_asset_balance(asset='USDT')
         usdt_balance = float(balance['free'])
         btc_price = float(self.client.get_symbol_ticker(symbol='BTCUSDT')['price'])
         quantity = (usdt_balance / btc_price) * 0.02
-        quantity = round(quantity, 6)
+        quantity = round_step_size(quantity, step_size)
 
         if self.btc_df['position'].iloc[-1] == 1:
-            self.place_buy_order(quantity, 'BTCUSDT')
+            order_buy = self.place_buy_order(quantity, 'BTCUSDT')
+            print(f"[BUY] {datetime.now()} ->", order_buy)
         elif self.btc_df['position'].iloc[-1] == -1:
-            self.place_sell_order(quantity, 'BTCUSDT')
+            order_sell = self.place_sell_order(quantity, 'BTCUSDT')
+            print(f"[SELL] {datetime.now()} ->", order_sell)
+            print("\n\n********************************************************\n")
+            self.calculate_profit("PROFIT: ", order_buy, order_sell)
+            print("\n********************************************************\n\n\n")
         else:
             print('No trade signal at this time.')
+
 
 

@@ -3,7 +3,7 @@ LABEL maintainer="Paulo Pereira, Vinicius Santos"
 
 RUN mkdir -p /home/trading-bot
 
-EXPOSE 8000
+EXPOSE 8050
 
 RUN apt-get update \
     && apt-get install -y python3.12 \
