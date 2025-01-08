@@ -1,5 +1,7 @@
 services:
   trading-bot:
+    build:
+      context: .
     stdin_open: true
     tty: true
     container_name: trading-bot
