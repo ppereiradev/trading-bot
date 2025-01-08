@@ -1,0 +1,14 @@
+services:
+  trading-bot:
+    stdin_open: true
+    tty: true
+    container_name: trading-bot
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - BINANCE_API=${BINANCE_API}
+      - BINANCE_SECRET=${BINANCE_SECRET}
+    volumes:
+      - ./trading-bot:/home/trading-bot
+      - ./requirements.txt:/home/requirements.txt
