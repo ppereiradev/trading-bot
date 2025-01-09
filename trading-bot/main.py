@@ -11,7 +11,7 @@ api_key = os.getenv("BINANCE_API_KEY")
 secret_key = os.getenv("BINANCE_SECRET_KEY")
 asset = os.getenv("BINANCE_ASSET")
 symbol = os.getenv("BINANCE_SYMBOL")
-api_url = 'https://testnet.binance.vision/api'
+api_url = 'https://testnet.binance.vision/api' # set as None in production
 
 
 trading_bot = TradingBot(api_key, secret_key, api_url, asset, symbol)

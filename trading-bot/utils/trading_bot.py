@@ -9,7 +9,10 @@ from binance.helpers import round_step_size
 class TradingBot:
     def __init__(self, api_key, secret_key, api_url, asset, symbol):
         self.client = Client(api_key, secret_key)
-        self.client.API_URL = api_url
+
+        if api_url:
+            self.client.API_URL = api_url
+
         self.position_to_sell = False
         self.asset = asset
         self.symbol = symbol
