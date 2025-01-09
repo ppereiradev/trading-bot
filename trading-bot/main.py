@@ -38,12 +38,12 @@ def update_graph(n_intervals):
 
     trading_bot.execute_trading()
     print(trading_bot.get_last_row(), "\n")
-    btc_df = trading_bot.get_btc_to_plot()
+    symbol_df = trading_bot.get_symbol_to_plot()
 
 
     fig = px.line(
-        btc_df,
-        x=btc_df.index,
+        symbol_df,
+        x=symbol_df.index,
         y=['sma_short', 'sma_long', 'close'],
         labels={
             'sma_short': 'SMA Curto',
