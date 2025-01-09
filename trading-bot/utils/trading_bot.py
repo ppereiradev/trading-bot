@@ -97,6 +97,7 @@ class TradingBot:
 
     def calculate_profit(self, order_buy, order_sell):
         if order_buy is not None and order_sell is not None:
+            balance = self.client.get_asset_balance(asset=self.asset)['free']
             buy_commission = order_buy['fills'][0]['commission']
             sell_commission = order_sell['fills'][0]['commission']
 
@@ -120,12 +121,14 @@ class TradingBot:
             print(f"Lucro bruto: {profit} {self.asset}")
             print(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}")
             print(f"Lucro líquido TOTAL: {self.profit} {self.asset}")
+            print(f"Balanço atual da Conta: {balance}")
 
             with open('../lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
                 file.write(f"******************************* INICIO *******************************\n")
                 file.write(f"Lucro bruto: {profit} {self.asset}\n")
                 file.write(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}\n")
                 file.write(f"Lucro líquido TOTAL: {self.profit} {self.asset}\n")
+                file.write(f"Balanço atual da conta: {balance}\n")
                 file.write(f"******************************* FIM *******************************\n\n\n")
 
     def execute_trading(self):
