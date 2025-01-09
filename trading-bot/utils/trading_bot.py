@@ -17,6 +17,8 @@ class TradingBot:
         self.asset = asset
         self.symbol = symbol
         self.profit = 0
+        self.order_buy = []
+        self.order_sell = []
 
     def get_balance(self, asset):
         return self.client.get_asset_balance(asset=asset)
@@ -75,7 +77,7 @@ class TradingBot:
             order = self.client.order_market_buy(
                 symbol=symbol,
                 quantity=quantity)
-            print('Bought {self.symbol}')
+            print(f"Bought {self.symbol}")
             return order
         except Exception as e:
             print(f'An error occurred: {e}')
@@ -86,7 +88,7 @@ class TradingBot:
             order = self.client.order_market_sell(
                 symbol=symbol,
                 quantity=quantity)
-            print('Sold {self.symbol}')
+            print(f"Sold {self.symbol}")
             return order
         except Exception as e:
             print(f'An error occurred: {e}')
@@ -96,40 +98,39 @@ class TradingBot:
         return self.symbol_df.iloc[-1]
 
     def calculate_profit(self, order_buy, order_sell):
-        if order_buy is not None and order_sell is not None:
-            balance = self.client.get_asset_balance(asset=self.asset)['free']
-            buy_commission = order_buy['fills'][0]['commission']
-            sell_commission = order_sell['fills'][0]['commission']
+        balance = self.client.get_asset_balance(asset=self.asset)['free']
+        buy_commission = order_buy['fills'][0]['commission']
+        sell_commission = order_sell['fills'][0]['commission']
 
-            buy_price = float(order_buy['price'])
-            buy_qty = float(order_buy['executedQty'])
-            total_spent = float(order_buy['cummulativeQuoteQty'])
+        buy_price = float(order_buy['price'])
+        buy_qty = float(order_buy['executedQty'])
+        total_spent = float(order_buy['cummulativeQuoteQty'])
 
-            sell_price = float(order_sell['price'])
-            sell_qty = float(order_sell['executedQty'])
-            total_received = float(order_sell['cummulativeQuoteQty'])
+        sell_price = float(order_sell['price'])
+        sell_qty = float(order_sell['executedQty'])
+        total_received = float(order_sell['cummulativeQuoteQty'])
 
-            profit = total_received - total_spent
+        profit = total_received - total_spent
 
-            commission_in_asset_buy = buy_commission * buy_price
-            commission_in_asset_sell = sell_commission * sell_price
+        commission_in_asset_buy = buy_commission * buy_price
+        commission_in_asset_sell = sell_commission * sell_price
 
-            profit_with_fees = profit - (commission_in_asset_buy + commission_in_asset_sell)
+        profit_with_fees = profit - (commission_in_asset_buy + commission_in_asset_sell)
 
-            self.profit += profit_with_fees
+        self.profit += profit_with_fees
 
-            print(f"Lucro bruto: {profit} {self.asset}")
-            print(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}")
-            print(f"Lucro líquido TOTAL: {self.profit} {self.asset}")
-            print(f"Balanço atual da Conta: {balance}")
+        print(f"Lucro bruto: {profit} {self.asset}")
+        print(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}")
+        print(f"Lucro líquido TOTAL: {self.profit} {self.asset}")
+        print(f"Balanço atual da Conta: {balance}")
 
-            with open('../lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
-                file.write(f"******************************* INICIO *******************************\n")
-                file.write(f"Lucro bruto: {profit} {self.asset}\n")
-                file.write(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}\n")
-                file.write(f"Lucro líquido TOTAL: {self.profit} {self.asset}\n")
-                file.write(f"Balanço atual da conta: {balance}\n")
-                file.write(f"******************************* FIM *******************************\n\n\n")
+        with open('../lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
+            file.write(f"******************************* INICIO *******************************\n")
+            file.write(f"Lucro bruto: {profit} {self.asset}\n")
+            file.write(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}\n")
+            file.write(f"Lucro líquido TOTAL: {self.profit} {self.asset}\n")
+            file.write(f"Balanço atual da conta: {balance}\n")
+            file.write(f"******************************* FIM *******************************\n\n\n")
 
     def execute_trading(self):
         self.get_sma()
@@ -146,16 +147,16 @@ class TradingBot:
         quantity = round_step_size(quantity, step_size)
 
         if self.symbol_df['position'].iloc[-1] == 1 and not self.position_to_sell:
-            order_buy = self.place_buy_order(quantity, self.symbol)
+            self.order_buy.append(self.place_buy_order(quantity, self.symbol))
             self.position_to_sell = not self.position_to_sell
-            print(f"[BUY] {datetime.now()} ->", order_buy)
+            print(f"[BUY] {datetime.now()} ->", self.order_buy[-1])
 
         elif self.symbol_df['position'].iloc[-1] == -1 and self.position_to_sell:
-            order_sell = self.place_sell_order(quantity, self.symbol)
+            self.order_sell.append(self.place_sell_order(quantity, self.symbol))
             self.position_to_sell = not self.position_to_sell
-            print(f"[SELL] {datetime.now()} ->", order_sell)
+            print(f"[SELL] {datetime.now()} ->", self.order_sell[-1])
             print("\n\n********************************************************\n")
-            self.calculate_profit("PROFIT: ", order_buy, order_sell)
+            self.calculate_profit("PROFIT: ", self.order_buy[-1], self.order_sell[-1])
             print("\n********************************************************\n\n\n")
 
         else:
