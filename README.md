@@ -1,6 +1,6 @@
 # Trading Bot Setup
 
-1. Add your API key and secret key to the respective variables in the `.env.sample` file, then rename this file to `.env`.
+1. Add your API key, secret key, asset (e.g., USDT), and symbol (e.g., BTCUSDT) to the respective variables in the `.env.sample` file, then rename this file to `.env`.
 
 2. Execute the command:
 ```bash
