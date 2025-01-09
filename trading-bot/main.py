@@ -9,17 +9,19 @@ from utils.trading_bot import TradingBot
 
 api_key = os.getenv("BINANCE_API_KEY")
 secret_key = os.getenv("BINANCE_SECRET_KEY")
+asset = os.getenv("BINANCE_ASSET")
+symbol = os.getenv("BINANCE_SYMBOL")
 api_url = 'https://testnet.binance.vision/api'
 
 
-trading_bot = TradingBot(api_key, secret_key, api_url)
+trading_bot = TradingBot(api_key, secret_key, api_url, asset, symbol)
 
 
 app = Dash(__name__)
 
 app.layout = html.Div([
-    html.H1("Gráfico de BTC com Médias Móveis", style={"textAlign": "center"}),
-    dcc.Graph(id='btc-graph'),
+    html.H1(f"Gráfico de {asset} com Médias Móveis", style={"textAlign": "center"}),
+    dcc.Graph(id='asset-graph'),
     dcc.Interval(
         id='interval-component',
         interval=150 * 1000, # time to update chart (150 seconds)
@@ -29,7 +31,7 @@ app.layout = html.Div([
 
 # Callback to update chart
 @app.callback(
-    Output('btc-graph', 'figure'),
+    Output('asset-graph', 'figure'),
     Input('interval-component', 'n_intervals')
 )
 def update_graph(n_intervals):
@@ -48,7 +50,7 @@ def update_graph(n_intervals):
             'sma_long': 'SMA Longo',
             'close': 'Preço de Fechamento'
         },
-        title='Preço de Fechamento e Médias Móveis de BTC'
+        title=f'Preço de Fechamento e Médias Móveis de {asset}'
     )
     return fig
 
