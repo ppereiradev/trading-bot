@@ -20,8 +20,8 @@ trading_bot = TradingBot(api_key, secret_key, api_url, asset, symbol)
 app = Dash(__name__)
 
 app.layout = html.Div([
-    html.H1(f"Gráfico de {asset} com Médias Móveis", style={"textAlign": "center"}),
-    dcc.Graph(id='asset-graph'),
+    html.H1(f"Gráfico de {symbol} com Médias Móveis", style={"textAlign": "center"}),
+    dcc.Graph(id='symbol-graph'),
     dcc.Interval(
         id='interval-component',
         interval=150 * 1000, # time to update chart (150 seconds)
@@ -31,7 +31,7 @@ app.layout = html.Div([
 
 # Callback to update chart
 @app.callback(
-    Output('asset-graph', 'figure'),
+    Output('symbol-graph', 'figure'),
     Input('interval-component', 'n_intervals')
 )
 def update_graph(n_intervals):
@@ -50,7 +50,7 @@ def update_graph(n_intervals):
             'sma_long': 'SMA Longo',
             'close': 'Preço de Fechamento'
         },
-        title=f'Preço de Fechamento e Médias Móveis de {asset}'
+        title=f'Preço de Fechamento e Médias Móveis de {symbol}'
     )
     return fig
 
