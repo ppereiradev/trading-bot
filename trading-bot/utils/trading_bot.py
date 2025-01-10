@@ -126,6 +126,7 @@ class TradingBot:
 
         with open('../lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
             file.write(f"******************************* INICIO *******************************\n")
+            file.write(f"Data e hora: {datetime.now()}\n")
             file.write(f"Lucro bruto: {profit} {self.asset}\n")
             file.write(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}\n")
             file.write(f"Lucro líquido TOTAL: {self.profit} {self.asset}\n")
