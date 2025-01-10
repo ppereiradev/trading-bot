@@ -119,6 +119,7 @@ class TradingBot:
 
         self.profit += profit_with_fees
 
+        print(f"Data e hora: {datetime.now()}")
         print(f"Lucro bruto: {profit} {self.asset}")
         print(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}")
         print(f"Lucro líquido TOTAL: {self.profit} {self.asset}")
@@ -158,7 +159,7 @@ class TradingBot:
             print(f"[SELL] {datetime.now()} ->", self.order_sell[-1])
 
             if len(self.order_buy) == len(self.order_sell):
-                print(f"\n\n******************************* INICIO {datetime.now()} *******************************\n")
+                print(f"\n\n******************************* INICIO *******************************\n")
                 self.calculate_profit(self.order_buy[-1], self.order_sell[-1])
                 print("\n******************************* FIM *******************************\n\n\n")
 
