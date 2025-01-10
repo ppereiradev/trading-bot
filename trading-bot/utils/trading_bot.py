@@ -144,7 +144,7 @@ class TradingBot:
             file.write(f"Lucro líquido após taxas: {profit_with_fees:.2f} USDT\n")
             file.write(f"Lucro líquido TOTAL: {self.total_profit:.2f} USDT\n")
             file.write(f"Balanço atual da conta: {balance:.2f} USDT\n")
-            file.write(f"******************************* FIM *******************************\n\n\n")
+            file.write(f"********************************* FIM ********************************\n\n\n")
 
     def execute_trading(self):
         self.get_sma()
@@ -172,7 +172,7 @@ class TradingBot:
             if len(self.order_buy) == len(self.order_sell):
                 print(f"\n\n******************************* INICIO *******************************\n")
                 self.calculate_profit_or_loss(self.order_buy[-1], self.order_sell[-1])
-                print("\n******************************* FIM *******************************\n\n\n")
+                print("\n********************************* FIM ********************************\n\n\n")
 
         else:
             print('No trade signal at this time.')
