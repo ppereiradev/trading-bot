@@ -16,12 +16,13 @@ class TradingBot:
         self.position_to_sell = False
         self.asset = asset
         self.symbol = symbol
-        self.total_profit = 0
+        self.total_profit = 0.0
         self.order_buy = []
         self.order_sell = []
+        self.balance_history = [float(self.client.get_asset_balance(asset=asset)['free'])]
 
     def get_balance(self, asset):
-        return self.client.get_asset_balance(asset=asset)
+        return float(self.client.get_asset_balance(asset=asset)['free'])
 
     def get_latest_price(self, symbol):
         return self.client.get_symbol_ticker(symbol=symbol)
@@ -99,8 +100,7 @@ class TradingBot:
 
     def calculate_profit_or_loss(self, order_buy, order_sell):
 
-        # Informações do saldo atual
-        balance = float(self.client.get_asset_balance(asset='USDT')['free'])
+        balance = self.get_balance()
 
         # Comprar - Informações da ordem de compra
         buy_fills = order_buy['fills']
@@ -131,6 +131,7 @@ class TradingBot:
 
         # Informações para o log
         print(f"Data e hora: {datetime.now()}")
+        print(f"Balanço anterior da Conta: {self.balance_history[-1]:.2f} USDT")
         print(f"Lucro bruto: {profit:.2f} USDT")
         print(f"Lucro líquido após taxas: {profit_with_fees:.2f} USDT")
         print(f"Lucro líquido TOTAL: {self.total_profit:.2f} USDT")
@@ -140,11 +141,14 @@ class TradingBot:
         with open('./lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
             file.write(f"******************************* INICIO *******************************\n")
             file.write(f"Data e hora: {datetime.now()}\n")
+            file.write(f"Balanço anterior da Conta: {self.balance_history[-1]:.2f} USDT")
             file.write(f"Lucro bruto: {profit:.2f} USDT\n")
             file.write(f"Lucro líquido após taxas: {profit_with_fees:.2f} USDT\n")
             file.write(f"Lucro líquido TOTAL: {self.total_profit:.2f} USDT\n")
             file.write(f"Balanço atual da conta: {balance:.2f} USDT\n")
             file.write(f"********************************* FIM ********************************\n\n\n")
+
+        self.balance_history.append(balance)
 
     def execute_trading(self):
         self.get_sma()
