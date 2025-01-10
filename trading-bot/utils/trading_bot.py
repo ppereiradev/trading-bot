@@ -155,9 +155,11 @@ class TradingBot:
             self.order_sell.append(self.place_sell_order(quantity, self.symbol))
             self.position_to_sell = not self.position_to_sell
             print(f"[SELL] {datetime.now()} ->", self.order_sell[-1])
-            print("\n\n********************************************************\n")
-            self.calculate_profit("PROFIT: ", self.order_buy[-1], self.order_sell[-1])
-            print("\n********************************************************\n\n\n")
+
+            if len(self.order_buy) == len(self.order_sell):
+                print(f"\n\n******************************* INICIO {datetime.now()} *******************************\n")
+                self.calculate_profit(self.order_buy[-1], self.order_sell[-1])
+                print("\n******************************* FIM *******************************\n\n\n")
 
         else:
             print('No trade signal at this time.')
