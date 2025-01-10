@@ -16,7 +16,7 @@ class TradingBot:
         self.position_to_sell = False
         self.asset = asset
         self.symbol = symbol
-        self.profit = 0
+        self.total_profit = 0
         self.order_buy = []
         self.order_sell = []
 
@@ -97,41 +97,53 @@ class TradingBot:
     def get_last_row(self):
         return self.symbol_df.iloc[-1]
 
-    def calculate_profit(self, order_buy, order_sell):
-        balance = self.client.get_asset_balance(asset=self.asset)['free']
-        buy_commission = order_buy['fills'][0]['commission']
-        sell_commission = order_sell['fills'][0]['commission']
+    def calculate_profit_or_loss(self, order_buy, order_sell):
 
-        buy_price = float(order_buy['price'])
-        buy_qty = float(order_buy['executedQty'])
-        total_spent = float(order_buy['cummulativeQuoteQty'])
+        # Informações do saldo atual
+        balance = float(self.client.get_asset_balance(asset='USDT')['free'])
 
-        sell_price = float(order_sell['price'])
-        sell_qty = float(order_sell['executedQty'])
-        total_received = float(order_sell['cummulativeQuoteQty'])
+        # Comprar - Informações da ordem de compra
+        buy_fills = order_buy['fills']
+        buy_qty = sum(float(fill['qty']) for fill in buy_fills)  # Soma todas as quantidades compradas
+        buy_costs = sum(float(fill['qty']) * float(fill['price']) for fill in buy_fills)  # Soma os custos totais de cada operação
+        buy_commission = sum(float(fill['commission']) for fill in buy_fills)  # Soma todas as comissões em BTC ou outro ativo
 
-        profit = total_received - total_spent
+        # Vender - Informações da ordem de venda
+        sell_fills = order_sell['fills']
+        sell_qty = sum(float(fill['qty']) for fill in sell_fills)  # Soma todas as quantidades vendidas
+        sell_revenue = sum(float(fill['qty']) * float(fill['price']) for fill in sell_fills)  # Soma os ganhos totais de cada operação
+        sell_commission = sum(float(fill['commission']) for fill in sell_fills)  # Soma todas as comissões em USDT ou outro ativo
 
-        commission_in_asset_buy = buy_commission * buy_price
-        commission_in_asset_sell = sell_commission * sell_price
+        # Lucro bruto (sem taxas)
+        profit = sell_revenue - buy_costs
 
-        profit_with_fees = profit - (commission_in_asset_buy + commission_in_asset_sell)
+        # Subtração das comissões
+        # Compra: A comissão é em BTC (precisamos converter para USDT)
+        buy_commission_usdt = buy_commission * float(buy_fills[0]['price'])
+        # Venda: A comissão já está em USDT
+        sell_commission_usdt = sell_commission
 
-        self.profit += profit_with_fees
+        # Lucro líquido (após taxas)
+        profit_with_fees = profit - (buy_commission_usdt + sell_commission_usdt)
 
+        # Atualização do lucro total
+        self.total_profit += profit_with_fees
+
+        # Informações para o log
         print(f"Data e hora: {datetime.now()}")
-        print(f"Lucro bruto: {profit} {self.asset}")
-        print(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}")
-        print(f"Lucro líquido TOTAL: {self.profit} {self.asset}")
-        print(f"Balanço atual da Conta: {balance}")
+        print(f"Lucro bruto: {profit:.2f} USDT")
+        print(f"Lucro líquido após taxas: {profit_with_fees:.2f} USDT")
+        print(f"Lucro líquido TOTAL: {self.total_profit:.2f} USDT")
+        print(f"Balanço atual da Conta: {balance:.2f} USDT")
 
-        with open('../lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
+        # Gravação em arquivo
+        with open('./lucros.txt', 'a') as file:  # 'a' para adicionar ao final do arquivo
             file.write(f"******************************* INICIO *******************************\n")
             file.write(f"Data e hora: {datetime.now()}\n")
-            file.write(f"Lucro bruto: {profit} {self.asset}\n")
-            file.write(f"Lucro líquido após taxas: {profit_with_fees} {self.asset}\n")
-            file.write(f"Lucro líquido TOTAL: {self.profit} {self.asset}\n")
-            file.write(f"Balanço atual da conta: {balance}\n")
+            file.write(f"Lucro bruto: {profit:.2f} USDT\n")
+            file.write(f"Lucro líquido após taxas: {profit_with_fees:.2f} USDT\n")
+            file.write(f"Lucro líquido TOTAL: {self.total_profit:.2f} USDT\n")
+            file.write(f"Balanço atual da conta: {balance:.2f} USDT\n")
             file.write(f"******************************* FIM *******************************\n\n\n")
 
     def execute_trading(self):
@@ -145,8 +157,7 @@ class TradingBot:
         balance = self.client.get_asset_balance(asset=self.asset)
         asset_balance = float(balance['free'])
         symbol_price = float(self.client.get_symbol_ticker(symbol=self.symbol)['price'])
-        quantity = (asset_balance / symbol_price) * 0.02
-        quantity = round_step_size(quantity, step_size)
+        quantity = round_step_size((asset_balance / symbol_price) * 0.02, step_size)
 
         if self.symbol_df['position'].iloc[-1] == 1 and not self.position_to_sell:
             self.order_buy.append(self.place_buy_order(quantity, self.symbol))
@@ -160,7 +171,7 @@ class TradingBot:
 
             if len(self.order_buy) == len(self.order_sell):
                 print(f"\n\n******************************* INICIO *******************************\n")
-                self.calculate_profit(self.order_buy[-1], self.order_sell[-1])
+                self.calculate_profit_or_loss(self.order_buy[-1], self.order_sell[-1])
                 print("\n******************************* FIM *******************************\n\n\n")
 
         else:
